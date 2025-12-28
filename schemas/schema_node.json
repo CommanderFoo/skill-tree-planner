@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema_node.json",
+  "title": "Skill Node",
+  "description": "A single node in a skill tree representing an allocatable skill or passive",
+  "type": "object",
+  "required": ["id", "name", "position", "max_rank", "current_rank", "cost_per_rank", "type"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for this node",
+      "pattern": "^[a-z0-9_]+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of the skill",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what the skill does",
+      "default": ""
+    },
+    "icon": {
+      "type": ["string", "null"],
+      "description": "Reference to an icon (URL, data URI, or icon key)",
+      "default": null
+    },
+    "position": {
+      "type": "object",
+      "description": "Position of the node in the tree canvas",
+      "required": ["x", "y"],
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate in pixels"
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate in pixels"
+        }
+      },
+      "additionalProperties": false
+    },
+    "max_rank": {
+      "type": "integer",
+      "description": "Maximum number of points that can be allocated to this node",
+      "minimum": 1,
+      "maximum": 100,
+      "default": 1
+    },
+    "current_rank": {
+      "type": "integer",
+      "description": "Current number of points allocated to this node",
+      "minimum": 0,
+      "default": 0
+    },
+    "cost_per_rank": {
+      "type": "array",
+      "description": "Point cost for each rank. Array length must equal max_rank. If single value, applies to all ranks.",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 1
+    },
+    "tags": {
+      "type": "array",
+      "description": "Categorization tags for filtering and grouping",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "type": {
+      "type": "string",
+      "description": "Whether this is a passive bonus or an active ability",
+      "enum": ["passive", "active"],
+      "default": "passive"
+    }
+  },
+  "additionalProperties": false
+}

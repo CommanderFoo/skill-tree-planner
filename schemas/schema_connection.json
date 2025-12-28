@@ -1,0 +1,45 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "schema_connection.json",
+	"title": "Skill Connection",
+	"description": "A directed dependency edge between two nodes in a skill tree",
+	"type": "object",
+	"required": [
+		"id",
+		"from_node_id",
+		"to_node_id"
+	],
+	"properties": {
+		"id": {
+			"type": "string",
+			"description": "Unique identifier for this connection",
+			"pattern": "^[a-z0-9_]+$"
+		},
+		"from_node_id": {
+			"type": "string",
+			"description": "ID of the source/prerequisite node",
+			"pattern": "^[a-z0-9_]+$"
+		},
+		"to_node_id": {
+			"type": "string",
+			"description": "ID of the target/dependent node",
+			"pattern": "^[a-z0-9_]+$"
+		},
+		"logic": {
+			"type": "string",
+			"description": "How this connection combines with other connections to the same target. AND requires all prerequisites, OR requires any one.",
+			"enum": [
+				"AND",
+				"OR"
+			],
+			"default": "AND"
+		},
+		"required_rank": {
+			"type": "integer",
+			"description": "Minimum rank required on the source node for this connection to be satisfied",
+			"minimum": 1,
+			"default": 1
+		}
+	},
+	"additionalProperties": false
+}
