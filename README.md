@@ -1,5 +1,7 @@
 # Skill Tree Planner
 
+https://commanderfoo.github.io/skill-tree-planner/
+
 A powerful, state-driven skill tree editor and simulator designed for game developers. This tool allows you to visually design complex skill systems, define dependency logic, and simulate point allocation in a live environment.
 
 ![Preview](preview.png)
