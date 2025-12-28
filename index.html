@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +11,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div id="app">
         <!-- Header Toolbar -->
         <header id="toolbar" class="toolbar">
             <div class="toolbar_left">
+                <a href="https://github.com/CommanderFoo/skill-tree-planner" target="_blank" rel="noopener noreferrer"
+                    class="btn btn_icon github_link" title="View Source on GitHub">
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path fill="currentColor"
+                            d="M12,2A10,10,0,0,0,8.84,21.5c.5.08.66-.23.66-.5V19.31c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61,1,.07,1.53,1.03,1.53,1.03.89,1.52,2.34,1.08,2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94a3.88,3.88,0,0,1,1-2.69,3.6,3.6,0,0,1,.1-2.65s.84-.27,2.75,1.02a9.42,9.42,0,0,1,5,0c1.91-1.29,2.75-1.02,2.75-1.02a3.6,3.6,0,0,1,.1,2.65,3.88,3.88,0,0,1,1,2.69c0,3.84-2.34,4.68-4.57,4.93.36.31.68.92.68,1.85V21c0,.27.16.59.67.5A10,10,0,0,0,12,2Z" />
+                    </svg>
+                </a>
                 <h1 class="app_title">Skill Tree Planner</h1>
                 <div class="tree_selector">
                     <select id="tree_select" class="tree_select">
@@ -321,4 +330,5 @@
     </div>
     <script type="module" src="src/main.js"></script>
 </body>
+
 </html>

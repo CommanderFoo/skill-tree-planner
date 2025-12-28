@@ -285,6 +285,16 @@ body {
     color: var(--color-text-primary);
 }
 
+.github_link {
+    border-radius: 50%; /* Make it circular */
+}
+
+.github_link:hover {
+    border-color: var(--color-accent-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
 .btn_tool {
     flex: 1;
     padding: var(--space-md);
