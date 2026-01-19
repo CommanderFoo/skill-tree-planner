@@ -54,8 +54,8 @@ function create_initial_state() {
                 y: 0
             },
             grid: {
-                visible: false,
-                snap_enabled: false,
+                visible: true,
+                snap_enabled: true,
                 cell_size: 100
             }
         },
@@ -109,6 +109,7 @@ function create_node(id, name, x, y) {
         tags: [],
         type: "active",
         metadata: "",
+        hidden_until_unlockable: false,
         prerequisite_logic: "AND", // "AND", "OR", "SUM"
         prerequisite_threshold: 1   // Used for SUM logic
     };

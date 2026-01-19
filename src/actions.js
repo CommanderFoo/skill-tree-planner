@@ -251,7 +251,7 @@ function update_node(state, tree_id, node_id, changes) {
 	const allowed_keys = [
 		"name", "description", "icon", "max_rank",
 		"cost_per_rank", "tags", "type", "metadata",
-		"prerequisite_logic", "prerequisite_threshold"
+		"hidden_until_unlockable", "prerequisite_logic", "prerequisite_threshold"
 	];
 
 	for (const key of allowed_keys) {

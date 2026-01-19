@@ -173,12 +173,49 @@ function render_connections(state, tree, elements) {
 
 	const statuses = get_all_node_statuses(state, tree.id);
 
+	// Helper to check if a node should be hidden (either directly or via a hidden parent)
+	const is_node_hidden = (node_id, visited = new Set()) => {
+		if (visited.has(node_id)) {
+			return false;
+		}
+
+		visited.add(node_id);
+		const node = tree.nodes.find(n => n.id === node_id);
+
+		if (!node) {
+			return false;
+		}
+
+		// Check if this node is directly hidden
+		if (node.hidden_until_unlockable && statuses[node_id] === "locked") {
+			return true;
+		}
+
+		// Check if any parent is hidden
+		const parent_connections = tree.connections.filter(c => c.to_node_id === node_id);
+
+		for (const conn of parent_connections) {
+			if (is_node_hidden(conn.from_node_id, visited)) {
+				return true;
+			}
+		}
+
+		return false;
+	};
+
 	for (const conn of tree.connections) {
 		const from_node = find_node(state, tree.id, conn.from_node_id);
 		const to_node = find_node(state, tree.id, conn.to_node_id);
 
 		if (!from_node || !to_node) {
 			continue;
+		}
+
+		// In play mode, skip connections involving hidden nodes
+		if (state.ui_state.mode === "play") {
+			if (is_node_hidden(from_node.id) || is_node_hidden(to_node.id)) {
+				continue;
+			}
 		}
 
 		const path = create_connection_path(state, from_node, to_node, conn, statuses);
@@ -231,8 +268,44 @@ function render_nodes(state, tree, elements) {
 
 	const statuses = get_all_node_statuses(state, tree.id);
 
+	// Helper to check if a node should be hidden (either directly or via a hidden parent)
+	const is_node_hidden = (node_id, visited = new Set()) => {
+		if (visited.has(node_id)) {
+			return false;
+		}
+
+		visited.add(node_id);
+		const node = tree.nodes.find(n => n.id === node_id);
+
+		if (!node) {
+			return false;
+		}
+
+		// Check if this node is directly hidden
+		if (node.hidden_until_unlockable && statuses[node_id] === "locked") {
+			return true;
+		}
+
+		// Check if any parent is hidden
+		const parent_connections = tree.connections.filter(c => c.to_node_id === node_id);
+
+		for (const conn of parent_connections) {
+			if (is_node_hidden(conn.from_node_id, visited)) {
+				return true;
+			}
+		}
+
+		return false;
+	};
+
 	for (const node of tree.nodes) {
 		const status = statuses[node.id];
+
+		// In play mode, skip nodes that are hidden (directly or via parent)
+		if (state.ui_state.mode === "play" && is_node_hidden(node.id)) {
+			continue;
+		}
+
 		const element = create_node_element(node, status, state);
 		container.appendChild(element);
 	}
@@ -338,7 +411,10 @@ function render_sidebar(state, elements) {
 		elements.node_prereq_threshold.value = node.prerequisite_threshold || 1;
 		elements.group_node_threshold.classList.toggle("hidden", node.prerequisite_logic !== "SUM");
 
-		// Event string
+		// Hidden until unlockable
+		elements.node_hidden_until.checked = node.hidden_until_unlockable || false;
+
+		// Metadata
 		elements.node_metadata.value = node.metadata || "";
 	}
 }

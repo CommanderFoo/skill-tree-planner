@@ -141,6 +141,7 @@ function cache_elements() {
 		node_metadata: document.getElementById("node_metadata"),
 		node_prereq_logic: document.getElementById("node_prereq_logic"),
 		node_prereq_threshold: document.getElementById("node_prereq_threshold"),
+		node_hidden_until: document.getElementById("node_hidden_until"),
 		group_node_threshold: document.getElementById("group_node_threshold"),
 		btn_delete_node: document.getElementById("btn_delete_node"),
 		connection_panel: document.getElementById("connection_panel"),

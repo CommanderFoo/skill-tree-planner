@@ -743,6 +743,16 @@ function setup_sidebar_interactions(get_state, dispatch, elements) {
 		}
 	});
 
+	elements.node_hidden_until.addEventListener("change", (event) => {
+		const state = get_state();
+		const tree_id = state.ui_state.active_tree_id;
+		const node_id = state.ui_state.selected_node_id;
+
+		if (tree_id && node_id) {
+			dispatch(actions.update_node, tree_id, node_id, { hidden_until_unlockable: event.target.checked });
+		}
+	});
+
 	elements.btn_delete_node.addEventListener("click", () => {
 		const state = get_state();
 		const tree_id = state.ui_state.active_tree_id;
