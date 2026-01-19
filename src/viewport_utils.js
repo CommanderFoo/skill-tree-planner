@@ -39,8 +39,10 @@ export function get_tree_bounds(tree) {
  */
 export function calculate_zoom_to_fit(tree, containerWidth, containerHeight, padding = 100) {
 	const bounds = get_tree_bounds(tree);
+
 	if (!bounds) {
-		return { x: 0, y: 0, zoom: 1 };
+		// Center the viewport when there are no nodes
+		return { x: containerWidth / 2, y: containerHeight / 2, zoom: 1 };
 	}
 
 	const contentWidth = bounds.maxX - bounds.minX;

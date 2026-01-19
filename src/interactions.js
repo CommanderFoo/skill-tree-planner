@@ -345,8 +345,8 @@ function setup_canvas_interactions(get_state, dispatch, elements) {
 			const dx = (event.clientX - drag_start.x) / zoom;
 			const dy = (event.clientY - drag_start.y) / zoom;
 
-			const new_x = Math.max(0, node_start.x + dx);
-			const new_y = Math.max(0, node_start.y + dy);
+			const new_x = node_start.x + dx;
+			const new_y = node_start.y + dy;
 
 			dispatch(actions.update_node_position, tree_id, drag_node_id, new_x, new_y);
 			return;
@@ -552,7 +552,12 @@ function setup_toolbar_interactions(get_state, dispatch, elements) {
 	});
 
 	elements.btn_reset_view.addEventListener("click", () => {
-		dispatch(actions.set_viewport, { x: 0, y: 0, zoom: 1 });
+		// Center the viewport so origin (0,0) is in the middle of the canvas
+		const rect = elements.canvas_container.getBoundingClientRect();
+		const centered_x = rect.width / 2;
+		const centered_y = rect.height / 2;
+
+		dispatch(actions.set_viewport, { x: centered_x, y: centered_y, zoom: 1 });
 	});
 
 	elements.btn_zoom_fit.addEventListener("click", () => {

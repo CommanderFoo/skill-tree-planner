@@ -60,6 +60,26 @@ function init() {
 	// Initial render
 	try {
 		render(app_state, elements);
+
+		// Center viewport on first load if it's at the default (0, 0) position
+		const vp = app_state.ui_state.viewport;
+
+		if (vp.x === 0 && vp.y === 0) {
+			const rect = elements.canvas_container.getBoundingClientRect();
+			app_state = {
+				...app_state,
+				ui_state: {
+					...app_state.ui_state,
+					viewport: {
+						...vp,
+						x: rect.width / 2,
+						y: rect.height / 2
+					}
+				}
+			};
+			save_project(app_state);
+			render(app_state, elements);
+		}
 	} catch (error) {
 		console.error("Error during initial render:", error);
 	}
