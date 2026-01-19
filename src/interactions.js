@@ -345,8 +345,15 @@ function setup_canvas_interactions(get_state, dispatch, elements) {
 			const dx = (event.clientX - drag_start.x) / zoom;
 			const dy = (event.clientY - drag_start.y) / zoom;
 
-			const new_x = node_start.x + dx;
-			const new_y = node_start.y + dy;
+			let new_x = node_start.x + dx;
+			let new_y = node_start.y + dy;
+
+			// Apply snap to grid if enabled
+			if (state.ui_state.grid.snap_enabled) {
+				const cell_size = state.ui_state.grid.cell_size;
+				new_x = Math.round(new_x / cell_size) * cell_size;
+				new_y = Math.round(new_y / cell_size) * cell_size;
+			}
 
 			dispatch(actions.update_node_position, tree_id, drag_node_id, new_x, new_y);
 			return;
@@ -726,12 +733,13 @@ function setup_sidebar_interactions(get_state, dispatch, elements) {
 		}
 	});
 
-	elements.node_event.addEventListener("change", (event) => {
+	elements.node_metadata.addEventListener("change", (event) => {
 		const state = get_state();
 		const tree_id = state.ui_state.active_tree_id;
 		const node_id = state.ui_state.selected_node_id;
+
 		if (tree_id && node_id) {
-			dispatch(actions.update_node, tree_id, node_id, { event: event.target.value });
+			dispatch(actions.update_node, tree_id, node_id, { metadata: event.target.value });
 		}
 	});
 
@@ -806,6 +814,29 @@ function setup_sidebar_interactions(get_state, dispatch, elements) {
 	elements.btn_show_sidebar.addEventListener("click", () => {
 		elements.sidebar.classList.remove("collapsed");
 	});
+
+	// Grid controls
+	elements.grid_visible.addEventListener("change", (event) => {
+		dispatch(actions.toggle_grid_visibility);
+	});
+
+	elements.grid_snap.addEventListener("change", (event) => {
+		dispatch(actions.toggle_snap_to_grid);
+	});
+
+	elements.grid_size.addEventListener("change", (event) => {
+		const size = parseInt(event.target.value, 10);
+
+		if (size >= 10 && size <= 200) {
+			dispatch(actions.set_grid_cell_size, size);
+		}
+	});
+
+	// Sync grid controls with initial state
+	const initial_state = get_state();
+	elements.grid_visible.checked = initial_state.ui_state.grid.visible;
+	elements.grid_snap.checked = initial_state.ui_state.grid.snap_enabled;
+	elements.grid_size.value = initial_state.ui_state.grid.cell_size;
 }
 
 /**

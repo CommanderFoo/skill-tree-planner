@@ -286,7 +286,8 @@ body {
 }
 
 .github_link {
-    border-radius: 50%; /* Make it circular */
+    border-radius: 50%;
+    /* Make it circular */
 }
 
 .github_link:hover {
@@ -1028,4 +1029,121 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--color-border-light);
+}
+
+/* Grid Layer */
+.grid_layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: visible;
+}
+
+.grid_line {
+    stroke: var(--color-border);
+    stroke-width: 1;
+    opacity: 0.5;
+}
+
+/* Grid Controls */
+.grid_controls {
+    margin-top: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.grid_controls_title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.form_group_inline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.form_group_inline label {
+    display: inline;
+    margin-bottom: 0;
+}
+
+.checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-accent-primary);
+    cursor: pointer;
+}
+
+/* Toolbar Grid Controls */
+.grid_controls_toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+}
+
+.toolbar_checkbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    transition: all var(--transition-fast);
+    background: transparent;
+    border: none;
+}
+
+.toolbar_checkbox:hover {
+    color: var(--color-text-primary);
+    background: var(--color-bg-hover);
+}
+
+.toolbar_checkbox input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.toolbar_checkbox:has(input:checked) {
+    color: var(--color-accent-primary);
+}
+
+.grid_size_input {
+    width: 48px;
+    height: 36px;
+    padding: 0 var(--space-xs);
+    background: transparent;
+    border: none;
+    border-left: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-family: inherit;
+    font-size: var(--font-size-sm);
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.grid_size_input:focus {
+    color: var(--color-text-primary);
+    outline: none;
+}
+
+.grid_size_input::-webkit-inner-spin-button,
+.grid_size_input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    display: none;
 }

@@ -110,6 +110,7 @@ function cache_elements() {
 
 		// Canvas
 		canvas_container: document.getElementById("canvas_container"),
+		grid_layer: document.getElementById("grid_layer"),
 		connections_layer: document.getElementById("connections_layer"),
 		temp_connection_layer: document.getElementById("temp_connection_layer"),
 		nodes_layer: document.getElementById("nodes_layer"),
@@ -137,7 +138,7 @@ function cache_elements() {
 		node_max_rank: document.getElementById("node_max_rank"),
 		node_type: document.getElementById("node_type"),
 		node_costs: document.getElementById("node_costs"),
-		node_event: document.getElementById("node_event"),
+		node_metadata: document.getElementById("node_metadata"),
 		node_prereq_logic: document.getElementById("node_prereq_logic"),
 		node_prereq_threshold: document.getElementById("node_prereq_threshold"),
 		group_node_threshold: document.getElementById("group_node_threshold"),
@@ -148,6 +149,9 @@ function cache_elements() {
 		edit_tools: document.getElementById("edit_tools"),
 		btn_add_node: document.getElementById("btn_add_node"),
 		btn_connect_mode: document.getElementById("btn_connect_mode"),
+		grid_visible: document.getElementById("grid_visible"),
+		grid_snap: document.getElementById("grid_snap"),
+		grid_size: document.getElementById("grid_size"),
 
 		// Tooltip
 		tooltip: document.getElementById("tooltip"),

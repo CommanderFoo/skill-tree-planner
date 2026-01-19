@@ -76,6 +76,23 @@
                         </svg>
                     </button>
                 </div>
+                <div class="grid_controls_toolbar">
+                    <label class="toolbar_checkbox" title="Show grid overlay on canvas">
+                        <input type="checkbox" id="grid_visible">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor"
+                                d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z" />
+                        </svg>
+                    </label>
+                    <label class="toolbar_checkbox" title="Snap nodes to grid when dragging">
+                        <input type="checkbox" id="grid_snap">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor" d="M20 19V3H4v16H2v2h20v-2h-2zM12 5l4 4h-3v4h-2V9H8l4-4z" />
+                        </svg>
+                    </label>
+                    <input type="number" id="grid_size" class="grid_size_input" min="10" max="200" value="100"
+                        title="Grid cell size in pixels">
+                </div>
                 <div class="toolbar_actions">
                     <button id="btn_reset" class="btn btn_secondary" title="Reset all points">
                         Reset
@@ -93,6 +110,7 @@
         <main id="main_content" class="main_content">
             <!-- Canvas Area -->
             <div id="canvas_container" class="canvas_container">
+                <svg id="grid_layer" class="grid_layer"></svg>
                 <svg id="connections_layer" class="connections_layer"></svg>
                 <svg id="temp_connection_layer" class="temp_connection_layer"></svg>
                 <div id="nodes_layer" class="nodes_layer"></div>
@@ -194,9 +212,9 @@
                         <span class="form_hint">Comma-separated list</span>
                     </div>
                     <div class="form_group">
-                        <label for="node_event">Event String</label>
-                        <input type="text" id="node_event" class="input" placeholder="OnSkillUnlocked"
-                            title="A unique event identifier when this node is interacted with.">
+                        <label for="node_metadata">Meta Data</label>
+                        <input type="text" id="node_metadata" class="input" placeholder="custom_data"
+                            title="Custom metadata associated with this node for game integration.">
                     </div>
                     <div class="form_row">
                         <div class="form_group">

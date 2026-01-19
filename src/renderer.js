@@ -104,8 +104,64 @@ function render_canvas(state, elements) {
 	elements.connections_layer.style.transform = transform;
 	elements.connections_layer.style.transformOrigin = "0 0";
 
+	render_grid(state, elements);
 	render_connections(state, tree, elements);
 	render_nodes(state, tree, elements);
+}
+
+/**
+ * Renders the grid overlay
+ */
+function render_grid(state, elements) {
+	const svg = elements.grid_layer;
+	svg.innerHTML = "";
+
+	if (!state.ui_state.grid.visible) {
+		return;
+	}
+
+	const vp = state.ui_state.viewport;
+	const cell_size = state.ui_state.grid.cell_size;
+	const container = elements.canvas_container;
+	const rect = container.getBoundingClientRect();
+
+	// Calculate visible area in world coordinates
+	const world_width = rect.width / vp.zoom;
+	const world_height = rect.height / vp.zoom;
+	const world_x = -vp.x / vp.zoom;
+	const world_y = -vp.y / vp.zoom;
+
+	// Calculate grid line positions
+	const start_x = Math.floor(world_x / cell_size) * cell_size;
+	const start_y = Math.floor(world_y / cell_size) * cell_size;
+	const end_x = world_x + world_width + cell_size;
+	const end_y = world_y + world_height + cell_size;
+
+	// Set SVG size and transform
+	svg.style.transform = `translate(${vp.x}px, ${vp.y}px) scale(${vp.zoom})`;
+	svg.style.transformOrigin = "0 0";
+
+	// Draw vertical lines
+	for (let x = start_x; x <= end_x; x += cell_size) {
+		const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+		line.setAttribute("x1", x);
+		line.setAttribute("y1", start_y);
+		line.setAttribute("x2", x);
+		line.setAttribute("y2", end_y);
+		line.classList.add("grid_line");
+		svg.appendChild(line);
+	}
+
+	// Draw horizontal lines
+	for (let y = start_y; y <= end_y; y += cell_size) {
+		const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+		line.setAttribute("x1", start_x);
+		line.setAttribute("y1", y);
+		line.setAttribute("x2", end_x);
+		line.setAttribute("y2", y);
+		line.classList.add("grid_line");
+		svg.appendChild(line);
+	}
 }
 
 /**
@@ -283,7 +339,7 @@ function render_sidebar(state, elements) {
 		elements.group_node_threshold.classList.toggle("hidden", node.prerequisite_logic !== "SUM");
 
 		// Event string
-		elements.node_event.value = node.event || "";
+		elements.node_metadata.value = node.metadata || "";
 	}
 }
 

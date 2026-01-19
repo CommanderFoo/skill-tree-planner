@@ -250,7 +250,7 @@ function update_node(state, tree_id, node_id, changes) {
 	// Apply allowed changes
 	const allowed_keys = [
 		"name", "description", "icon", "max_rank",
-		"cost_per_rank", "tags", "type", "event",
+		"cost_per_rank", "tags", "type", "metadata",
 		"prerequisite_logic", "prerequisite_threshold"
 	];
 
@@ -704,6 +704,44 @@ function set_connection_settings(state, settings) {
 	return new_state;
 }
 
+// ============================================================================
+// Grid Actions
+// ============================================================================
+
+/**
+ * Toggles grid visibility
+ * @param {object} state - Current state
+ * @returns {object} New state with grid visibility toggled
+ */
+function toggle_grid_visibility(state) {
+	const new_state = clone_state(state);
+	new_state.ui_state.grid.visible = !new_state.ui_state.grid.visible;
+	return new_state;
+}
+
+/**
+ * Toggles snap to grid
+ * @param {object} state - Current state
+ * @returns {object} New state with snap enabled toggled
+ */
+function toggle_snap_to_grid(state) {
+	const new_state = clone_state(state);
+	new_state.ui_state.grid.snap_enabled = !new_state.ui_state.grid.snap_enabled;
+	return new_state;
+}
+
+/**
+ * Sets the grid cell size
+ * @param {object} state - Current state
+ * @param {number} size - New cell size
+ * @returns {object} New state with updated cell size
+ */
+function set_grid_cell_size(state, size) {
+	const new_state = clone_state(state);
+	new_state.ui_state.grid.cell_size = Math.max(10, Math.min(200, size));
+	return new_state;
+}
+
 export {
 	// Project actions
 	update_project_metadata,
@@ -739,5 +777,10 @@ export {
 	// Connection mode actions
 	start_connection_mode,
 	cancel_connection_mode,
-	set_connection_settings
+	set_connection_settings,
+
+	// Grid actions
+	toggle_grid_visibility,
+	toggle_snap_to_grid,
+	set_grid_cell_size
 };

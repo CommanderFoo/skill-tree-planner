@@ -52,6 +52,11 @@ function create_initial_state() {
                 node_id: null,
                 x: 0,
                 y: 0
+            },
+            grid: {
+                visible: false,
+                snap_enabled: false,
+                cell_size: 100
             }
         },
         history: {
@@ -103,7 +108,7 @@ function create_node(id, name, x, y) {
         cost_per_rank: [1],
         tags: [],
         type: "active",
-        event: "",
+        metadata: "",
         prerequisite_logic: "AND", // "AND", "OR", "SUM"
         prerequisite_threshold: 1   // Used for SUM logic
     };
