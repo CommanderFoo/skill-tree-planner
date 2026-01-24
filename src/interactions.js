@@ -666,6 +666,61 @@ function setup_sidebar_interactions(get_state, dispatch, elements) {
 		}
 	});
 
+	// Cost mode change
+	elements.tree_cost_mode.addEventListener("change", (event) => {
+		const state = get_state();
+		const tree_id = state.ui_state.active_tree_id;
+		if (tree_id) {
+			dispatch(actions.update_tree, tree_id, { cost_mode: event.target.value });
+		}
+	});
+
+	// Add resource button
+	elements.btn_add_resource.addEventListener("click", () => {
+		elements.resource_modal_title.textContent = "Add Resource";
+		elements.resource_name.value = "";
+		elements.resource_color.value = "#6366f1";
+		elements.resource_total.value = "100";
+		elements.resource_modal.dataset.mode = "add";
+		elements.resource_modal.dataset.resource_id = "";
+		show_modal(elements.resource_modal);
+		elements.resource_name.focus();
+	});
+
+	// Resource list interactions (delegated)
+	elements.resources_list.addEventListener("click", (event) => {
+		const state = get_state();
+		const tree_id = state.ui_state.active_tree_id;
+		const tree = find_tree(state, tree_id);
+		if (!tree) return;
+
+		const row = event.target.closest(".resource_row");
+		if (!row) return;
+
+		const resource_id = row.dataset.resource_id;
+		const resource = tree.resources.find(r => r.id === resource_id);
+		if (!resource) return;
+
+		// Edit button
+		if (event.target.closest(".btn_edit_resource")) {
+			elements.resource_modal_title.textContent = "Edit Resource";
+			elements.resource_name.value = resource.name;
+			elements.resource_color.value = resource.icon_color;
+			elements.resource_total.value = resource.pool.total;
+			elements.resource_modal.dataset.mode = "edit";
+			elements.resource_modal.dataset.resource_id = resource_id;
+			show_modal(elements.resource_modal);
+			elements.resource_name.focus();
+		}
+
+		// Delete button
+		if (event.target.closest(".btn_delete_resource")) {
+			if (confirm(`Delete resource "${resource.name}"?`)) {
+				dispatch(actions.remove_resource, tree_id, resource_id);
+			}
+		}
+	});
+
 	// Node properties
 	elements.node_name.addEventListener("change", (event) => {
 		const state = get_state();
@@ -751,6 +806,52 @@ function setup_sidebar_interactions(get_state, dispatch, elements) {
 		if (tree_id && node_id) {
 			dispatch(actions.update_node, tree_id, node_id, { hidden_until_unlockable: event.target.checked });
 		}
+	});
+
+	// Node resource costs (delegated)
+	elements.node_resource_costs.addEventListener("change", (event) => {
+		if (!event.target.classList.contains("resource_cost_input")) return;
+
+		const state = get_state();
+		const tree_id = state.ui_state.active_tree_id;
+		const node_id = state.ui_state.selected_node_id;
+		const node = find_node(state, tree_id, node_id);
+		const tree = find_tree(state, tree_id);
+
+		if (!tree_id || !node_id || !node || !tree) return;
+
+		const rank = parseInt(event.target.dataset.rank, 10);
+		const resource_id = event.target.dataset.resource_id;
+		const amount = parseInt(event.target.value, 10) || 0;
+
+		// Build new resource_costs array
+		const new_resource_costs = [];
+		for (let r = 0; r < node.max_rank; r++) {
+			const existing_rank_costs = node.resource_costs && node.resource_costs[r]
+				? [...node.resource_costs[r]]
+				: [];
+
+			if (r === rank) {
+				// Update or add the cost for this resource
+				const existing_index = existing_rank_costs.findIndex(c => c.resource_id === resource_id);
+				if (amount > 0) {
+					if (existing_index >= 0) {
+						existing_rank_costs[existing_index] = { resource_id, amount };
+					} else {
+						existing_rank_costs.push({ resource_id, amount });
+					}
+				} else {
+					// Remove if amount is 0
+					if (existing_index >= 0) {
+						existing_rank_costs.splice(existing_index, 1);
+					}
+				}
+			}
+
+			new_resource_costs.push(existing_rank_costs);
+		}
+
+		dispatch(actions.update_node, tree_id, node_id, { resource_costs: new_resource_costs });
 	});
 
 	elements.btn_delete_node.addEventListener("click", () => {
@@ -902,6 +1003,49 @@ function setup_modal_interactions(get_state, dispatch, elements) {
 		show_modal(elements.tree_modal);
 		elements.new_tree_name.value = "";
 		elements.new_tree_name.focus();
+	});
+
+	// Resource modal
+	elements.btn_confirm_resource.addEventListener("click", () => {
+		const state = get_state();
+		const tree_id = state.ui_state.active_tree_id;
+		const name = elements.resource_name.value.trim();
+		const color = elements.resource_color.value;
+		const total = parseInt(elements.resource_total.value, 10) || 100;
+
+		if (!name) {
+			alert("Please enter a resource name.");
+			return;
+		}
+
+		const mode = elements.resource_modal.dataset.mode;
+		const resource_id = elements.resource_modal.dataset.resource_id;
+
+		if (mode === "add") {
+			dispatch(actions.add_resource, tree_id, {
+				name: name,
+				icon_color: color,
+				total: total
+			});
+		} else if (mode === "edit" && resource_id) {
+			dispatch(actions.update_resource, tree_id, resource_id, {
+				name: name,
+				icon_color: color,
+				total: total
+			});
+		}
+
+		hide_modal(elements.resource_modal);
+	});
+
+	elements.btn_cancel_resource.addEventListener("click", () => {
+		hide_modal(elements.resource_modal);
+	});
+
+	elements.resource_name.addEventListener("keypress", (event) => {
+		if (event.key === "Enter") {
+			elements.btn_confirm_resource.click();
+		}
 	});
 
 	// Modal backdrop clicks

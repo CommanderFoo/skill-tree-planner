@@ -1,0 +1,46 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "schema_resource.json",
+	"title": "Resource",
+	"description": "A custom resource type for skill trees using resource-based costs",
+	"type": "object",
+	"required": ["id", "name", "icon_color", "pool"],
+	"properties": {
+		"id": {
+			"type": "string",
+			"description": "Unique identifier for this resource",
+			"pattern": "^[a-z0-9_]+$"
+		},
+		"name": {
+			"type": "string",
+			"description": "Display name of the resource",
+			"minLength": 1,
+			"maxLength": 100
+		},
+		"icon_color": {
+			"type": "string",
+			"description": "Hex color for the resource indicator",
+			"pattern": "^#[0-9a-fA-F]{6}$"
+		},
+		"pool": {
+			"type": "object",
+			"description": "Resource pool configuration",
+			"required": ["total", "spent"],
+			"properties": {
+				"total": {
+					"type": "integer",
+					"description": "Total amount of this resource available",
+					"minimum": 0
+				},
+				"spent": {
+					"type": "integer",
+					"description": "Amount of this resource currently spent",
+					"minimum": 0,
+					"default": 0
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"additionalProperties": false
+}

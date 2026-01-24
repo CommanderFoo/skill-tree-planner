@@ -37,12 +37,13 @@
                 </div>
             </div>
             <div class="toolbar_center">
-                <div class="point_display">
+                <div id="point_display" class="point_display">
                     <span class="point_label">Points:</span>
                     <span id="points_available" class="points_value">0</span>
                     <span class="point_separator">/</span>
                     <span id="points_total" class="points_value">0</span>
                 </div>
+                <div id="resources_display" class="resources_display hidden"></div>
             </div>
             <div class="toolbar_right">
                 <div class="mode_toggle">
@@ -153,9 +154,24 @@
                             title="Optional description explaining the purpose or theme of this skill tree."></textarea>
                     </div>
                     <div class="form_group">
+                        <label for="tree_cost_mode">Cost System</label>
+                        <select id="tree_cost_mode" class="input"
+                            title="Choose between skill points (single pool) or custom resources (multiple resource types).">
+                            <option value="skill_points">Skill Points</option>
+                            <option value="resources">Resources</option>
+                        </select>
+                    </div>
+                    <!-- Skill Points Section -->
+                    <div id="skill_points_section" class="form_group">
                         <label for="tree_points">Total Points</label>
                         <input type="number" id="tree_points" class="input" min="0" value="20"
                             title="Maximum number of points available to allocate in this tree. Players can spend these points on skills during Play mode.">
+                    </div>
+                    <!-- Resources Section -->
+                    <div id="resources_section" class="resources_section hidden">
+                        <label>Resources</label>
+                        <div id="resources_list" class="resources_list"></div>
+                        <button id="btn_add_resource" class="btn btn_secondary btn_small">+ Add Resource</button>
                     </div>
                     <div class="form_group">
                         <label for="export_convention">Export Naming</label>
@@ -205,11 +221,17 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form_group">
+                    <!-- Skill Points Cost -->
+                    <div id="node_costs_section" class="form_group">
                         <label for="node_costs">Cost per Rank</label>
                         <input type="text" id="node_costs" class="input" placeholder="1, 1, 2, 3"
                             title="Point cost for each rank. Use comma-separated values for different costs per rank (e.g., '1, 2, 3' means rank 1 costs 1 point, rank 2 costs 2 points, etc.).">
                         <span class="form_hint">Comma-separated list</span>
+                    </div>
+                    <!-- Resource Costs -->
+                    <div id="node_resource_costs_section" class="form_group hidden">
+                        <label>Resource Costs per Rank</label>
+                        <div id="node_resource_costs" class="node_resource_costs"></div>
                     </div>
                     <div class="form_group">
                         <label for="node_metadata">Meta Data</label>
@@ -346,6 +368,33 @@
                 <div class="modal_footer">
                     <button id="btn_cancel_tree" class="btn btn_secondary">Cancel</button>
                     <button id="btn_confirm_tree" class="btn btn_primary">Create</button>
+                </div>
+            </div>
+        </div>
+        <!-- Resource Edit Modal -->
+        <div id="resource_modal" class="modal hidden">
+            <div class="modal_backdrop"></div>
+            <div class="modal_content modal_small">
+                <div class="modal_header">
+                    <h2 id="resource_modal_title">Add Resource</h2>
+                </div>
+                <div class="modal_body">
+                    <div class="form_group">
+                        <label for="resource_name">Name</label>
+                        <input type="text" id="resource_name" class="input" placeholder="e.g., Red Nectar">
+                    </div>
+                    <div class="form_group">
+                        <label for="resource_color">Color</label>
+                        <input type="color" id="resource_color" class="input input_color" value="#6366f1">
+                    </div>
+                    <div class="form_group">
+                        <label for="resource_total">Total Amount</label>
+                        <input type="number" id="resource_total" class="input" min="1" value="100">
+                    </div>
+                </div>
+                <div class="modal_footer">
+                    <button id="btn_cancel_resource" class="btn btn_secondary">Cancel</button>
+                    <button id="btn_confirm_resource" class="btn btn_primary">Save</button>
                 </div>
             </div>
         </div>

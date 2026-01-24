@@ -10,6 +10,7 @@ import {
 	create_tree,
 	create_node,
 	create_connection,
+	create_resource,
 	find_tree,
 	find_node,
 	get_tree_index,
@@ -127,6 +128,114 @@ function update_tree(state, tree_id, changes) {
 	}
 	if (changes.point_source !== undefined) {
 		tree.point_pool.source = changes.point_source;
+	}
+	if (changes.cost_mode !== undefined) {
+		tree.cost_mode = changes.cost_mode;
+	}
+
+	return new_state;
+}
+
+// ============================================================================
+// Resource Actions
+// ============================================================================
+
+/**
+ * Adds a new resource to a tree
+ * @param {object} state - Current state
+ * @param {string} tree_id - ID of tree to add resource to
+ * @param {object} options - Resource options { name, icon_color, total }
+ * @returns {object} New state with added resource
+ */
+function add_resource(state, tree_id, options = {}) {
+	const new_state = touch_modified(clone_state(state));
+	const tree_index = get_tree_index(new_state, tree_id);
+
+	if (tree_index === -1) {
+		return state;
+	}
+
+	const tree = new_state.project.trees[tree_index];
+	const id = generate_id("res");
+	const resource = create_resource(
+		id,
+		options.name || "New Resource",
+		options.icon_color || "#6366f1",
+		options.total || 100
+	);
+
+	tree.resources.push(resource);
+
+	return new_state;
+}
+
+/**
+ * Updates a resource's properties
+ * @param {object} state - Current state
+ * @param {string} tree_id - ID of tree containing the resource
+ * @param {string} resource_id - ID of resource to update
+ * @param {object} changes - Properties to update { name, icon_color, total }
+ * @returns {object} New state with updated resource
+ */
+function update_resource(state, tree_id, resource_id, changes) {
+	const new_state = touch_modified(clone_state(state));
+	const tree_index = get_tree_index(new_state, tree_id);
+
+	if (tree_index === -1) {
+		return state;
+	}
+
+	const tree = new_state.project.trees[tree_index];
+	const resource = tree.resources.find(r => r.id === resource_id);
+
+	if (!resource) {
+		return state;
+	}
+
+	if (changes.name !== undefined) {
+		resource.name = changes.name;
+	}
+	if (changes.icon_color !== undefined) {
+		resource.icon_color = changes.icon_color;
+	}
+	if (changes.total !== undefined) {
+		resource.pool.total = changes.total;
+	}
+
+	return new_state;
+}
+
+/**
+ * Removes a resource from a tree
+ * @param {object} state - Current state
+ * @param {string} tree_id - ID of tree containing the resource
+ * @param {string} resource_id - ID of resource to remove
+ * @returns {object} New state with resource removed
+ */
+function remove_resource(state, tree_id, resource_id) {
+	const new_state = touch_modified(clone_state(state));
+	const tree_index = get_tree_index(new_state, tree_id);
+
+	if (tree_index === -1) {
+		return state;
+	}
+
+	const tree = new_state.project.trees[tree_index];
+	const resource_index = tree.resources.findIndex(r => r.id === resource_id);
+
+	if (resource_index === -1) {
+		return state;
+	}
+
+	tree.resources.splice(resource_index, 1);
+
+	// Remove this resource from all node resource_costs
+	for (const node of tree.nodes) {
+		if (node.resource_costs && node.resource_costs.length > 0) {
+			node.resource_costs = node.resource_costs.map(rank_costs =>
+				rank_costs.filter(cost => cost.resource_id !== resource_id)
+			);
+		}
 	}
 
 	return new_state;
@@ -250,7 +359,7 @@ function update_node(state, tree_id, node_id, changes) {
 	// Apply allowed changes
 	const allowed_keys = [
 		"name", "description", "icon", "max_rank",
-		"cost_per_rank", "tags", "type", "metadata",
+		"cost_per_rank", "resource_costs", "tags", "type", "metadata",
 		"hidden_until_unlockable", "prerequisite_logic", "prerequisite_threshold"
 	];
 
@@ -325,19 +434,47 @@ function allocate_point(state, tree_id, node_id) {
 		return state;
 	}
 
-	// Calculate cost
-	const cost_index = Math.min(node.current_rank, node.cost_per_rank.length - 1);
-	const cost = node.cost_per_rank[cost_index];
+	// Handle based on cost mode
+	if (tree.cost_mode === "resources") {
+		// Get resource costs for the next rank
+		const rank_index = node.current_rank;
+		const rank_costs = node.resource_costs && node.resource_costs[rank_index]
+			? node.resource_costs[rank_index]
+			: [];
 
-	// Check if enough points
-	const available = tree.point_pool.total - tree.point_pool.spent;
-	if (available < cost) {
-		return state;
+		// Check if we can afford all resources
+		for (const cost of rank_costs) {
+			const resource = tree.resources.find(r => r.id === cost.resource_id);
+			if (!resource) {
+				return state; // Resource doesn't exist
+			}
+			const available = resource.pool.total - resource.pool.spent;
+			if (available < cost.amount) {
+				return state; // Not enough of this resource
+			}
+		}
+
+		// Deduct all resources
+		for (const cost of rank_costs) {
+			const resource = tree.resources.find(r => r.id === cost.resource_id);
+			resource.pool.spent += cost.amount;
+		}
+	} else {
+		// Skill points mode
+		const cost_index = Math.min(node.current_rank, node.cost_per_rank.length - 1);
+		const cost = node.cost_per_rank[cost_index];
+
+		// Check if enough points
+		const available = tree.point_pool.total - tree.point_pool.spent;
+		if (available < cost) {
+			return state;
+		}
+
+		tree.point_pool.spent += cost;
 	}
 
 	// Allocate
 	node.current_rank += 1;
-	tree.point_pool.spent += cost;
 
 	return new_state;
 }
@@ -377,13 +514,30 @@ function refund_point(state, tree_id, node_id) {
 		return state;
 	}
 
-	// Calculate refund amount
-	const cost_index = Math.min(node.current_rank - 1, node.cost_per_rank.length - 1);
-	const refund = node.cost_per_rank[cost_index];
+	// Handle based on cost mode
+	if (tree.cost_mode === "resources") {
+		// Get resource costs for the rank being refunded
+		const rank_index = node.current_rank - 1;
+		const rank_costs = node.resource_costs && node.resource_costs[rank_index]
+			? node.resource_costs[rank_index]
+			: [];
+
+		// Refund all resources
+		for (const cost of rank_costs) {
+			const resource = tree.resources.find(r => r.id === cost.resource_id);
+			if (resource) {
+				resource.pool.spent -= cost.amount;
+			}
+		}
+	} else {
+		// Skill points mode
+		const cost_index = Math.min(node.current_rank - 1, node.cost_per_rank.length - 1);
+		const refund = node.cost_per_rank[cost_index];
+		tree.point_pool.spent -= refund;
+	}
 
 	// Refund
 	node.current_rank -= 1;
-	tree.point_pool.spent -= refund;
 
 	// Cascading refunds: check if any dependents become locked
 	// Always cascade in Play mode for a smoother experience, or in Edit mode if setting is enabled
@@ -410,10 +564,26 @@ function apply_cascade_refunds(state, tree_id) {
 			if (node.current_rank > 0) {
 				const prereqs_met = check_prerequisites(state, tree_id, node.id);
 				if (!prereqs_met) {
-					// Refund all points from this node
-					for (let i = 0; i < node.current_rank; i++) {
-						const cost_index = Math.min(i, node.cost_per_rank.length - 1);
-						tree.point_pool.spent -= node.cost_per_rank[cost_index];
+					// Refund all points/resources from this node
+					if (tree.cost_mode === "resources") {
+						// Refund resources for each rank
+						for (let i = 0; i < node.current_rank; i++) {
+							const rank_costs = node.resource_costs && node.resource_costs[i]
+								? node.resource_costs[i]
+								: [];
+							for (const cost of rank_costs) {
+								const resource = tree.resources.find(r => r.id === cost.resource_id);
+								if (resource) {
+									resource.pool.spent -= cost.amount;
+								}
+							}
+						}
+					} else {
+						// Refund skill points
+						for (let i = 0; i < node.current_rank; i++) {
+							const cost_index = Math.min(i, node.cost_per_rank.length - 1);
+							tree.point_pool.spent -= node.cost_per_rank[cost_index];
+						}
 					}
 					node.current_rank = 0;
 					changed = true;
@@ -446,6 +616,11 @@ function reset_tree(state, tree_id) {
 
 	// Reset spent points
 	tree.point_pool.spent = 0;
+
+	// Reset resource pools
+	for (const resource of tree.resources) {
+		resource.pool.spent = 0;
+	}
 
 	return new_state;
 }
@@ -750,6 +925,11 @@ export {
 	add_tree,
 	remove_tree,
 	update_tree,
+
+	// Resource actions
+	add_resource,
+	update_resource,
+	remove_resource,
 
 	// Node actions
 	add_node,

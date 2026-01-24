@@ -60,7 +60,7 @@ function render_tree_selector(state, elements) {
 }
 
 /**
- * Renders the point display
+ * Renders the point display (or resources display)
  */
 function render_point_display(state, elements) {
 	const tree = find_tree(state, state.ui_state.active_tree_id);
@@ -68,12 +68,42 @@ function render_point_display(state, elements) {
 	if (!tree) {
 		elements.points_available.textContent = "0";
 		elements.points_total.textContent = "0";
+		elements.point_display.classList.remove("hidden");
+		elements.resources_display.classList.add("hidden");
 		return;
 	}
 
-	const available = tree.point_pool.total - tree.point_pool.spent;
-	elements.points_available.textContent = available.toString();
-	elements.points_total.textContent = tree.point_pool.total.toString();
+	if (tree.cost_mode === "resources") {
+		// Show resources display, hide points display
+		elements.point_display.classList.add("hidden");
+		elements.resources_display.classList.remove("hidden");
+
+		// Render resources
+		elements.resources_display.innerHTML = "";
+		for (const resource of tree.resources) {
+			const available = resource.pool.total - resource.pool.spent;
+			const item = document.createElement("div");
+			item.className = "resource_item";
+			item.innerHTML = `
+				<span class="resource_indicator" style="background-color: ${resource.icon_color}"></span>
+				<span class="resource_name">${resource.name}:</span>
+				<span class="resource_value">${available}/${resource.pool.total}</span>
+			`;
+			elements.resources_display.appendChild(item);
+		}
+
+		if (tree.resources.length === 0) {
+			elements.resources_display.innerHTML = '<span class="resource_name">No resources defined</span>';
+		}
+	} else {
+		// Show points display, hide resources display
+		elements.point_display.classList.remove("hidden");
+		elements.resources_display.classList.add("hidden");
+
+		const available = tree.point_pool.total - tree.point_pool.spent;
+		elements.points_available.textContent = available.toString();
+		elements.points_total.textContent = tree.point_pool.total.toString();
+	}
 }
 
 /**
@@ -394,6 +424,19 @@ function render_sidebar(state, elements) {
 		elements.tree_points.value = tree.point_pool.total;
 		elements.export_convention.value = state.project.metadata.export_convention || "snake_case";
 
+		// Cost mode
+		elements.tree_cost_mode.value = tree.cost_mode || "skill_points";
+
+		// Show/hide cost sections based on mode
+		const is_resources_mode = tree.cost_mode === "resources";
+		elements.skill_points_section.classList.toggle("hidden", is_resources_mode);
+		elements.resources_section.classList.toggle("hidden", !is_resources_mode);
+
+		// Render resources list
+		if (is_resources_mode) {
+			render_resources_list(tree, elements);
+		}
+
 		// Check for validation warnings
 		render_tree_warnings(state, tree, elements);
 	}
@@ -416,6 +459,118 @@ function render_sidebar(state, elements) {
 
 		// Metadata
 		elements.node_metadata.value = node.metadata || "";
+
+		// Show/hide cost sections based on tree's cost mode
+		const is_resources_mode = tree && tree.cost_mode === "resources";
+		elements.node_costs_section.classList.toggle("hidden", is_resources_mode);
+		elements.node_resource_costs_section.classList.toggle("hidden", !is_resources_mode);
+
+		// Render resource costs editor
+		if (is_resources_mode && tree) {
+			render_node_resource_costs(state, tree, node, elements);
+		}
+	}
+}
+
+/**
+ * Renders the resources list in tree properties
+ * @param {object} tree - Tree object
+ * @param {object} elements - DOM elements
+ */
+function render_resources_list(tree, elements) {
+	const list = elements.resources_list;
+	list.innerHTML = "";
+
+	for (const resource of tree.resources) {
+		const row = document.createElement("div");
+		row.className = "resource_row";
+		row.dataset.resource_id = resource.id;
+
+		const available = resource.pool.total - resource.pool.spent;
+		row.innerHTML = `
+			<span class="resource_indicator" style="background-color: ${resource.icon_color}"></span>
+			<div class="resource_info">
+				<div class="resource_name">${resource.name}</div>
+				<div class="resource_pool">${available} / ${resource.pool.total} available</div>
+			</div>
+			<div class="resource_actions">
+				<button class="btn btn_icon_small btn_edit_resource" title="Edit resource">
+					<svg viewBox="0 0 24 24" width="14" height="14">
+						<path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+					</svg>
+				</button>
+				<button class="btn btn_icon_small btn_danger btn_delete_resource" title="Delete resource">
+					<svg viewBox="0 0 24 24" width="14" height="14">
+						<path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+					</svg>
+				</button>
+			</div>
+		`;
+		list.appendChild(row);
+	}
+
+	if (tree.resources.length === 0) {
+		const empty = document.createElement("div");
+		empty.className = "form_hint";
+		empty.textContent = "No resources defined. Click 'Add Resource' to create one.";
+		list.appendChild(empty);
+	}
+}
+
+/**
+ * Renders the resource costs editor for a node
+ * @param {object} state - Current application state
+ * @param {object} tree - Tree object
+ * @param {object} node - Node object
+ * @param {object} elements - DOM elements
+ */
+function render_node_resource_costs(state, tree, node, elements) {
+	const container = elements.node_resource_costs;
+	container.innerHTML = "";
+
+	if (tree.resources.length === 0) {
+		const hint = document.createElement("div");
+		hint.className = "form_hint";
+		hint.textContent = "Add resources to the tree first.";
+		container.appendChild(hint);
+		return;
+	}
+
+	// Create cost editor for each rank
+	for (let rank = 0; rank < node.max_rank; rank++) {
+		const rank_row = document.createElement("div");
+		rank_row.className = "rank_cost_row";
+
+		const header = document.createElement("div");
+		header.className = "rank_cost_header";
+		header.textContent = `Rank ${rank + 1}`;
+		rank_row.appendChild(header);
+
+		const inputs = document.createElement("div");
+		inputs.className = "rank_cost_inputs";
+
+		for (const resource of tree.resources) {
+			// Get current cost for this resource at this rank
+			const rank_costs = node.resource_costs && node.resource_costs[rank] ? node.resource_costs[rank] : [];
+			const cost_entry = rank_costs.find(c => c.resource_id === resource.id);
+			const current_amount = cost_entry ? cost_entry.amount : 0;
+
+			const input_row = document.createElement("div");
+			input_row.className = "rank_cost_input_row";
+			input_row.innerHTML = `
+				<span class="resource_indicator" style="background-color: ${resource.icon_color}"></span>
+				<span class="resource_label">${resource.name}</span>
+				<input type="number" class="input resource_cost_input"
+					data-rank="${rank}"
+					data-resource_id="${resource.id}"
+					min="0"
+					value="${current_amount}">
+			`;
+			inputs.appendChild(input_row);
+		}
+
+		rank_row.appendChild(inputs);
+		container.appendChild(rank_row);
 	}
 }
 
@@ -485,15 +640,36 @@ function render_tooltip(state, node, x, y, elements) {
 	}
 
 	const tree_id = state.ui_state.active_tree_id;
+	const tree = find_tree(state, tree_id);
 	const status = get_node_status(state, tree_id, node.id);
-	const cost = get_allocation_cost(node);
 
 	elements.tooltip_name.textContent = node.name;
 	elements.tooltip_rank.textContent = `${node.current_rank}/${node.max_rank}`;
 	elements.tooltip_description.textContent = node.description || "No description";
-	elements.tooltip_cost.textContent = node.current_rank < node.max_rank
-		? `Next rank costs ${cost} point${cost !== 1 ? "s" : ""}`
-		: "Max rank reached";
+
+	// Show cost based on cost mode
+	if (node.current_rank >= node.max_rank) {
+		elements.tooltip_cost.textContent = "Max rank reached";
+	} else if (tree && tree.cost_mode === "resources") {
+		// Show resource costs
+		const rank_index = node.current_rank;
+		const rank_costs = node.resource_costs && node.resource_costs[rank_index]
+			? node.resource_costs[rank_index]
+			: [];
+
+		if (rank_costs.length === 0) {
+			elements.tooltip_cost.textContent = "Next rank: Free";
+		} else {
+			const cost_strings = rank_costs.map(cost => {
+				const resource = tree.resources.find(r => r.id === cost.resource_id);
+				return resource ? `${cost.amount} ${resource.name}` : `${cost.amount} ???`;
+			});
+			elements.tooltip_cost.textContent = `Next rank: ${cost_strings.join(", ")}`;
+		}
+	} else {
+		const cost = get_allocation_cost(node);
+		elements.tooltip_cost.textContent = `Next rank costs ${cost} point${cost !== 1 ? "s" : ""}`;
+	}
 
 	const status_messages = {
 		[NODE_STATUS.LOCKED]: "🔒 Prerequisites not met",

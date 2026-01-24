@@ -83,13 +83,38 @@ function validate_tree(tree, index) {
 		}
 	}
 
+	// Validate cost_mode if present
+	if (tree.cost_mode && !["skill_points", "resources"].includes(tree.cost_mode)) {
+		errors.push(`${prefix}.cost_mode must be "skill_points" or "resources"`);
+	}
+
+	// Validate resources if present
+	const resource_ids = new Set();
+	if (tree.resources) {
+		if (!Array.isArray(tree.resources)) {
+			errors.push(`${prefix}.resources must be an array`);
+		} else {
+			for (let i = 0; i < tree.resources.length; i++) {
+				const res_errors = validate_resource(tree.resources[i], `${prefix}.resources[${i}]`);
+				errors.push(...res_errors);
+
+				if (tree.resources[i].id) {
+					if (resource_ids.has(tree.resources[i].id)) {
+						errors.push(`Duplicate resource ID: ${tree.resources[i].id}`);
+					}
+					resource_ids.add(tree.resources[i].id);
+				}
+			}
+		}
+	}
+
 	if (!Array.isArray(tree.nodes)) {
 		errors.push(`${prefix}.nodes must be an array`);
 	} else {
 		// Validate nodes
 		const node_ids = new Set();
 		for (let i = 0; i < tree.nodes.length; i++) {
-			const node_errors = validate_node(tree.nodes[i], `${prefix}.nodes[${i}]`);
+			const node_errors = validate_node(tree.nodes[i], `${prefix}.nodes[${i}]`, resource_ids);
 			errors.push(...node_errors);
 
 			// Check for duplicate IDs
@@ -120,9 +145,10 @@ function validate_tree(tree, index) {
  * Validates a node object
  * @param {object} node - Node to validate
  * @param {string} prefix - Prefix for error messages
+ * @param {Set} resource_ids - Set of valid resource IDs
  * @returns {array} Array of error messages
  */
-function validate_node(node, prefix) {
+function validate_node(node, prefix, resource_ids = new Set()) {
 	const errors = [];
 
 	if (!node) {
@@ -152,6 +178,72 @@ function validate_node(node, prefix) {
 
 	if (!Array.isArray(node.cost_per_rank) || node.cost_per_rank.length === 0) {
 		errors.push(`${prefix}.cost_per_rank must be a non-empty array`);
+	}
+
+	// Validate resource_costs if present
+	if (node.resource_costs) {
+		if (!Array.isArray(node.resource_costs)) {
+			errors.push(`${prefix}.resource_costs must be an array`);
+		} else {
+			for (let r = 0; r < node.resource_costs.length; r++) {
+				const rank_costs = node.resource_costs[r];
+				if (!Array.isArray(rank_costs)) {
+					errors.push(`${prefix}.resource_costs[${r}] must be an array`);
+					continue;
+				}
+				for (let c = 0; c < rank_costs.length; c++) {
+					const cost = rank_costs[c];
+					if (!cost.resource_id || typeof cost.resource_id !== "string") {
+						errors.push(`${prefix}.resource_costs[${r}][${c}].resource_id is missing or invalid`);
+					} else if (resource_ids.size > 0 && !resource_ids.has(cost.resource_id)) {
+						errors.push(`${prefix}.resource_costs[${r}][${c}].resource_id references non-existent resource`);
+					}
+					if (typeof cost.amount !== "number" || cost.amount < 0) {
+						errors.push(`${prefix}.resource_costs[${r}][${c}].amount must be a non-negative number`);
+					}
+				}
+			}
+		}
+	}
+
+	return errors;
+}
+
+/**
+ * Validates a resource object
+ * @param {object} resource - Resource to validate
+ * @param {string} prefix - Prefix for error messages
+ * @returns {array} Array of error messages
+ */
+function validate_resource(resource, prefix) {
+	const errors = [];
+
+	if (!resource) {
+		errors.push(`${prefix} is null or undefined`);
+		return errors;
+	}
+
+	if (!resource.id || typeof resource.id !== "string") {
+		errors.push(`${prefix}.id is missing or invalid`);
+	}
+
+	if (!resource.name || typeof resource.name !== "string") {
+		errors.push(`${prefix}.name is missing or invalid`);
+	}
+
+	if (!resource.icon_color || typeof resource.icon_color !== "string") {
+		errors.push(`${prefix}.icon_color is missing or invalid`);
+	}
+
+	if (!resource.pool) {
+		errors.push(`${prefix}.pool is missing`);
+	} else {
+		if (typeof resource.pool.total !== "number" || resource.pool.total < 0) {
+			errors.push(`${prefix}.pool.total must be a non-negative number`);
+		}
+		if (typeof resource.pool.spent !== "number" || resource.pool.spent < 0) {
+			errors.push(`${prefix}.pool.spent must be a non-negative number`);
+		}
 	}
 
 	return errors;
@@ -337,6 +429,7 @@ export {
 	validate_project,
 	validate_tree,
 	validate_node,
+	validate_resource,
 	validate_connection,
 	export_project,
 	import_project,

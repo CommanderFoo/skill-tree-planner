@@ -95,8 +95,10 @@ function cache_elements() {
 		// Toolbar
 		tree_select: document.getElementById("tree_select"),
 		btn_add_tree: document.getElementById("btn_add_tree"),
+		point_display: document.getElementById("point_display"),
 		points_available: document.getElementById("points_available"),
 		points_total: document.getElementById("points_total"),
+		resources_display: document.getElementById("resources_display"),
 		btn_mode_edit: document.getElementById("btn_mode_edit"),
 		btn_mode_play: document.getElementById("btn_mode_play"),
 		btn_zoom_in: document.getElementById("btn_zoom_in"),
@@ -129,8 +131,11 @@ function cache_elements() {
 		tree_warnings: document.getElementById("tree_warnings"),
 		warning_list: document.getElementById("warning_list"),
 		btn_delete_tree: document.getElementById("btn_delete_tree"),
-
-
+		tree_cost_mode: document.getElementById("tree_cost_mode"),
+		skill_points_section: document.getElementById("skill_points_section"),
+		resources_section: document.getElementById("resources_section"),
+		resources_list: document.getElementById("resources_list"),
+		btn_add_resource: document.getElementById("btn_add_resource"),
 
 		node_properties: document.getElementById("node_properties"),
 		node_name: document.getElementById("node_name"),
@@ -138,6 +143,9 @@ function cache_elements() {
 		node_max_rank: document.getElementById("node_max_rank"),
 		node_type: document.getElementById("node_type"),
 		node_costs: document.getElementById("node_costs"),
+		node_costs_section: document.getElementById("node_costs_section"),
+		node_resource_costs_section: document.getElementById("node_resource_costs_section"),
+		node_resource_costs: document.getElementById("node_resource_costs"),
 		node_metadata: document.getElementById("node_metadata"),
 		node_prereq_logic: document.getElementById("node_prereq_logic"),
 		node_prereq_threshold: document.getElementById("node_prereq_threshold"),
@@ -174,7 +182,16 @@ function cache_elements() {
 		tree_modal: document.getElementById("tree_modal"),
 		new_tree_name: document.getElementById("new_tree_name"),
 		btn_cancel_tree: document.getElementById("btn_cancel_tree"),
-		btn_confirm_tree: document.getElementById("btn_confirm_tree")
+		btn_confirm_tree: document.getElementById("btn_confirm_tree"),
+
+		// Resource Modal
+		resource_modal: document.getElementById("resource_modal"),
+		resource_modal_title: document.getElementById("resource_modal_title"),
+		resource_name: document.getElementById("resource_name"),
+		resource_color: document.getElementById("resource_color"),
+		resource_total: document.getElementById("resource_total"),
+		btn_cancel_resource: document.getElementById("btn_cancel_resource"),
+		btn_confirm_resource: document.getElementById("btn_confirm_resource")
 	};
 }
 

@@ -78,11 +78,13 @@ function create_tree(id, name) {
         id: id,
         name: name,
         description: "",
+        cost_mode: "skill_points", // "skill_points" | "resources"
         point_pool: {
             total: 20,
             spent: 0,
             source: "local"
         },
+        resources: [], // Only used when cost_mode === "resources"
         nodes: [],
         connections: []
     };
@@ -106,6 +108,7 @@ function create_node(id, name, x, y) {
         max_rank: 1,
         current_rank: 0,
         cost_per_rank: [1],
+        resource_costs: [], // Array of arrays: one per rank, each containing {resource_id, amount} pairs
         tags: [],
         type: "active",
         metadata: "",
@@ -128,6 +131,26 @@ function create_connection(id, from_node_id, to_node_id) {
         from_node_id: from_node_id,
         to_node_id: to_node_id,
         required_rank: 1
+    };
+}
+
+/**
+ * Creates a new resource with default values
+ * @param {string} id - Unique resource identifier
+ * @param {string} name - Display name
+ * @param {string} icon_color - Hex color for the resource indicator
+ * @param {number} total - Total amount of this resource available
+ * @returns {object} New resource object
+ */
+function create_resource(id, name, icon_color, total) {
+    return {
+        id: id,
+        name: name,
+        icon_color: icon_color,
+        pool: {
+            total: total,
+            spent: 0
+        }
     };
 }
 
@@ -237,6 +260,7 @@ export {
     create_tree,
     create_node,
     create_connection,
+    create_resource,
     clone_state,
     touch_modified,
     generate_id,

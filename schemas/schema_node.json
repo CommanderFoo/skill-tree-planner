@@ -65,6 +65,30 @@
       },
       "minItems": 1
     },
+    "resource_costs": {
+      "type": "array",
+      "description": "Resource costs per rank. Outer array is indexed by rank, inner arrays contain {resource_id, amount} pairs.",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["resource_id", "amount"],
+          "properties": {
+            "resource_id": {
+              "type": "string",
+              "description": "ID of the resource"
+            },
+            "amount": {
+              "type": "integer",
+              "description": "Amount of this resource required",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "default": []
+    },
     "tags": {
       "type": "array",
       "description": "Categorization tags for filtering and grouping",

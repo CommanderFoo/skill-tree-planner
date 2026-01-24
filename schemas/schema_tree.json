@@ -28,6 +28,12 @@
 			"description": "Description of this skill tree's theme or purpose",
 			"default": ""
 		},
+		"cost_mode": {
+			"type": "string",
+			"description": "Cost system: skill_points uses a single point pool, resources uses custom resources",
+			"enum": ["skill_points", "resources"],
+			"default": "skill_points"
+		},
 		"point_pool": {
 			"type": "object",
 			"description": "Configuration for the point pool used by this tree",
@@ -72,6 +78,14 @@
 			"description": "All connections (dependencies) between nodes in this tree",
 			"items": {
 				"$ref": "schema_connection.json"
+			},
+			"default": []
+		},
+		"resources": {
+			"type": "array",
+			"description": "Custom resources for this tree (only used when cost_mode is 'resources')",
+			"items": {
+				"$ref": "schema_resource.json"
 			},
 			"default": []
 		}

@@ -6,10 +6,13 @@ A powerful, state-driven skill tree editor and simulator designed for game devel
 
 ![Preview](preview.png)
 
-## 🚀 Features
+## Features
 
 - **Interactive Canvas**: Smoothly pan, zoom, and arrange skill nodes with a modern, responsive interface.
 - **Dependency Engine**: Build complex unlock requirements using AND, OR, and SUM logic.
+- **Flexible Cost Systems**:
+  - **Skill Points**: Traditional single-pool point allocation.
+  - **Custom Resources**: Define multiple resource types (e.g., "Red Nectar", "Blue Essence") with individual pools and per-rank costs.
 - **Edit & Play Modes**:
   - **Edit Mode**: Freedom to design, move nodes, and modify properties without constraints.
   - **Play Mode**: Real-time simulation of skill progression with point costs and validation.
@@ -18,7 +21,7 @@ A powerful, state-driven skill tree editor and simulator designed for game devel
   - **Import/Export**: Easily move your skill trees between environments or integrate them directly into your game (Unity, Godot, etc.).
 - **Vanilla Core**: Built with modern ES6+ JavaScript, CSS3, and HTML5. No heavy frameworks, zero dependencies.
 
-## 🛠️ Usage
+## Usage
 
 1. Open `index.html` in any modern web browser.
 2. Use the **Add Tree** button to create your first skill tree.
@@ -27,6 +30,6 @@ A powerful, state-driven skill tree editor and simulator designed for game devel
 5. Switch to **Play Mode** to test your skill tree's progression logic.
 6. Use **Export** to save your progress or generate a JSON file for your game.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

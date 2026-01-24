@@ -258,6 +258,53 @@ function get_prerequisites(state, tree_id, node_id) {
 // ============================================================================
 
 /**
+ * Gets the resource costs for a specific rank of a node
+ * @param {object} node - Node object
+ * @param {number} rank_index - The rank index (0-based)
+ * @returns {array} Array of {resource_id, amount} pairs
+ */
+function get_resource_costs_for_rank(node, rank_index) {
+	if (!node.resource_costs || !node.resource_costs[rank_index]) {
+		return [];
+	}
+	return node.resource_costs[rank_index];
+}
+
+/**
+ * Checks if resources are affordable for the next rank
+ * @param {object} tree - Tree object
+ * @param {object} node - Node object
+ * @returns {object} { affordable, missing_resources }
+ */
+function check_resource_affordability(tree, node) {
+	const rank_index = node.current_rank;
+	const rank_costs = get_resource_costs_for_rank(node, rank_index);
+	const missing_resources = [];
+
+	for (const cost of rank_costs) {
+		const resource = tree.resources.find(r => r.id === cost.resource_id);
+		if (!resource) {
+			missing_resources.push({ resource_id: cost.resource_id, reason: "Resource not found" });
+			continue;
+		}
+		const available = resource.pool.total - resource.pool.spent;
+		if (available < cost.amount) {
+			missing_resources.push({
+				resource_id: cost.resource_id,
+				name: resource.name,
+				needed: cost.amount,
+				available: available
+			});
+		}
+	}
+
+	return {
+		affordable: missing_resources.length === 0,
+		missing_resources: missing_resources
+	};
+}
+
+/**
  * Checks if a point can be allocated to a node
  * @param {object} state - Current state
  * @param {string} tree_id - Tree ID
@@ -291,13 +338,27 @@ function can_allocate_point(state, tree_id, node_id) {
 			};
 		}
 
-		const cost = get_allocation_cost(node);
-		const available = tree.point_pool.total - tree.point_pool.spent;
-		if (available < cost) {
-			return {
-				can_allocate: false,
-				reason: "Not enough points"
-			};
+		// Check cost based on mode
+		if (tree.cost_mode === "resources") {
+			const { affordable, missing_resources } = check_resource_affordability(tree, node);
+			if (!affordable) {
+				const first_missing = missing_resources[0];
+				return {
+					can_allocate: false,
+					reason: first_missing.name
+						? `Not enough ${first_missing.name}`
+						: "Not enough resources"
+				};
+			}
+		} else {
+			const cost = get_allocation_cost(node);
+			const available = tree.point_pool.total - tree.point_pool.spent;
+			if (available < cost) {
+				return {
+					can_allocate: false,
+					reason: "Not enough points"
+				};
+			}
 		}
 
 		return {
@@ -330,15 +391,27 @@ function can_allocate_point(state, tree_id, node_id) {
 		};
 	}
 
-	// Check points
-	const cost = get_allocation_cost(node);
-	const available = tree.point_pool.total - tree.point_pool.spent;
-
-	if (available < cost) {
-		return {
-			can_allocate: false,
-			reason: "Not enough points"
-		};
+	// Check cost based on mode
+	if (tree.cost_mode === "resources") {
+		const { affordable, missing_resources } = check_resource_affordability(tree, node);
+		if (!affordable) {
+			const first_missing = missing_resources[0];
+			return {
+				can_allocate: false,
+				reason: first_missing.name
+					? `Not enough ${first_missing.name}`
+					: "Not enough resources"
+			};
+		}
+	} else {
+		const cost = get_allocation_cost(node);
+		const available = tree.point_pool.total - tree.point_pool.spent;
+		if (available < cost) {
+			return {
+				can_allocate: false,
+				reason: "Not enough points"
+			};
+		}
 	}
 
 	return {
@@ -686,6 +759,34 @@ function calculate_spent_points(tree) {
 }
 
 /**
+ * Calculates the total spent resources in a tree
+ * @param {object} tree - Tree object
+ * @returns {object} Map of resource_id to spent amount
+ */
+function calculate_spent_resources(tree) {
+	const spent = {};
+
+	// Initialize all resources to 0
+	for (const resource of tree.resources) {
+		spent[resource.id] = 0;
+	}
+
+	// Sum up spent resources from all nodes
+	for (const node of tree.nodes) {
+		for (let i = 0; i < node.current_rank; i++) {
+			const rank_costs = get_resource_costs_for_rank(node, i);
+			for (const cost of rank_costs) {
+				if (spent[cost.resource_id] !== undefined) {
+					spent[cost.resource_id] += cost.amount;
+				}
+			}
+		}
+	}
+
+	return spent;
+}
+
+/**
  * Detects cycles in the dependency graph
  * @param {object} tree - Tree object
  * @returns {array|null} Array of node IDs forming a cycle, or null
@@ -758,5 +859,8 @@ export {
 	check_tree_reachability,
 	validate_tree,
 	calculate_spent_points,
+	calculate_spent_resources,
+	get_resource_costs_for_rank,
+	check_resource_affordability,
 	detect_cycle
 };
